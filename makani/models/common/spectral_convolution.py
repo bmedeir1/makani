@@ -18,6 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import math
+from typing import Optional
 
 from torch import amp
 
@@ -114,7 +115,7 @@ class SpectralConv(nn.Module):
             self.bias.is_shared_mp = ["model"]
             self.bias.sharded_dims_mp = [None, None, None, None]
 
-    def forward(self, x):
+    def forward(self, x, override_weight: Optional[torch.Tensor] = None):
         dtype = x.dtype
         residual = x
         x = x.float()
@@ -127,7 +128,10 @@ class SpectralConv(nn.Module):
 
         B, C, H, W = x.shape
         x = x.reshape(B, self.num_groups, C // self.num_groups, H, W)
-        xp = self._contract(x, self.weight, separable=self.separable, operator_type=self.operator_type)
+        if override_weight is not None:
+            xp = self._contract(x, override_weight, separable=self.separable, operator_type=self.operator_type)
+        else:
+            xp = self._contract(x, self.weight, separable=self.separable, operator_type=self.operator_type)
         x = xp.reshape(B, self.out_channels, H, W).contiguous()
 
         with amp.autocast(device_type="cuda", enabled=False):
