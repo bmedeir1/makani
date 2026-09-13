@@ -152,7 +152,7 @@ class ModelWrapper(torch.nn.Module):
         self.model.preprocessor.set_rng(reset=reset, seed=seed)
         return
         
-    def forward(self, x, time, normalized_data=True, replace_state=None):
+    def forward(self, x, time, normalized_data=True, replace_state=None, **model_kwargs):
         if not normalized_data:
             x = (x - self.in_bias) / self.in_scale
 
@@ -164,7 +164,7 @@ class ModelWrapper(torch.nn.Module):
                 z = z[None]
             self.model.preprocessor.cache_unpredicted_features(None, None, xz=z, yz=None)
 
-        out = self.model(x, replace_state=replace_state)
+        out = self.model(x, replace_state=replace_state, **model_kwargs)
 
         if not normalized_data:
             out = out * self.out_scale + self.out_bias

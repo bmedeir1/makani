@@ -25,7 +25,7 @@ class SingleStepWrapper(nn.Module):
         self.preprocessor = Preprocessor2D(params)
         self.model = model_handle()
 
-    def forward(self, inp, update_state=True, replace_state=True):
+    def forward(self, inp, update_state=True, replace_state=True, **model_kwargs):
         # update internal state
         if update_state:
             self.preprocessor.update_internal_state(replace_state=replace_state)
@@ -41,7 +41,7 @@ class SingleStepWrapper(nn.Module):
         inpans = self.preprocessor.add_static_features(inpan)
 
         # forward pass
-        yn = self.model(inpans)
+        yn = self.model(inpans, **model_kwargs)
 
         # perform bias correction if requested
         yn = self.preprocessor.correct_bias(yn)
